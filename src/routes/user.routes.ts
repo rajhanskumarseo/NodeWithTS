@@ -8,8 +8,45 @@ const saltround = 10;
 const usersRouter = Router();
 
 // get API to test the working of route
-usersRouter.get('/', (request: Request, response: Response) => {
-    return response.json("OK");
+usersRouter.get('/all', authenticate, (req: Request, res: Response) => {
+    console.log('Working line 12');
+    pool.getConnection(function (err : any, conn : any) {
+        if (err)
+        {
+            console.log('Entered into error')
+            console.log(err)
+            res.send({
+                success: false,
+                statusCode: 500,
+                message: 'Getting error during the connection'
+            })
+
+            return;
+        }
+
+        console.log('Line 27');
+
+        // if you got a connection...
+        pool.query('SELECT Id, Email, Mobile, InsertDateTimeUtc as CreatedDate FROM register', function(err : any, rows : any) {
+            if(err) {
+                conn.release();
+                return res.send({
+                    success: false,
+                    statusCode: 400
+                });
+            }
+
+            // for simplicity, just send the rows
+            res.send({
+                message: 'Success',
+                statusCode: 200,
+                data: rows
+            });
+
+            // CLOSE THE CONNECTION
+            conn.release();
+        })
+    })
 });
 
 // get single user details
@@ -73,6 +110,7 @@ usersRouter.post('/register', (req: Request, res: Response) => {
         
         bcrypt.hash(req.body.password, saltround, (error: any, hash: string) =>
             {
+                console.log('Entered into error6')
                 if(error)
                 {
                     res.send({
@@ -89,6 +127,7 @@ usersRouter.post('/register', (req: Request, res: Response) => {
                     conn.query(sqlQuery, [req.body.email, req.body.phone, hash], function(err : any, rows : any) {
                         if(err) {
                             conn.release();
+                            console.log(err);
                             return res.send({
                                 success: false,
                                 statusCode: 400
@@ -126,7 +165,8 @@ usersRouter.post('/login', (req: Request, res: Response) => {
 
             return;
         }
-
+        
+        console.log('Line 132');
         console.log(req.body);
         pool.query('SELECT password FROM register WHERE email=?', [req.body.email], function(err : any, rows : any) {
             if(err) {

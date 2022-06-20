@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import mysql from 'mysql';
+import mysql from 'mysql2';
 import routes from './routes';
 import dotenv from 'dotenv';
 
